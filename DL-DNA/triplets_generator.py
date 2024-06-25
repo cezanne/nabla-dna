@@ -1,4 +1,5 @@
 import os
+import argparse
 
 def generate_new_triplet_file(images_dir, original_triplet_file, new_triplet_file):
     with open(original_triplet_file, 'r') as file:
@@ -11,7 +12,6 @@ def generate_new_triplet_file(images_dir, original_triplet_file, new_triplet_fil
         for new_negative in all_images:
             new_triplets.append((anchor, positive, new_negative))
 
-
     new_triplets.sort(key=lambda x: tuple(os.path.splitext(image)[0] for image in x))
 
     with open(new_triplet_file, 'w') as file:
@@ -21,17 +21,19 @@ def generate_new_triplet_file(images_dir, original_triplet_file, new_triplet_fil
 def filter_triplet_file(new_triplet_file):
     with open(new_triplet_file, 'r') as file:
         triplets = [line.strip().split() for line in file.readlines()]
-    valid_triplets = [triplet for triplet in triplets if (triplet[2] != triplet[0] and triplet[2] != triplet[1]) and "(1)" not in triplet]
-    
+    valid_triplets = [triplet for triplet in triplets if triplet[2] != triplet[0] and triplet[2] != triplet[1]]
 
     with open(new_triplet_file, 'w') as file:
         for valid_triplet in valid_triplets:
             file.write(' '.join(valid_triplet) + '\n')
 
 if __name__ == "__main__":
-    images_dir = '../images'
-    original_triplet_file = './triplet.txt'
-    new_triplet_file = './triplet_new.txt'
+    parser = argparse.ArgumentParser(description='new triplet 파일 생성')
+    parser.add_argument('images_dir', type=str, help='이미지를 담은 파일')
+    parser.add_argument('original_triplet_file', type=str, help='original triplet 파일 경로')
+    parser.add_argument('new_triplet_file', type=str, help='new triplet 파일 경로')
 
-    generate_new_triplet_file(images_dir, original_triplet_file, new_triplet_file)
-    filter_triplet_file(new_triplet_file)
+    args = parser.parse_args()
+
+    generate_new_triplet_file(args.images_dir, args.original_triplet_file, args.new_triplet_file)
+    filter_triplet_file(args.new_triplet_file)
