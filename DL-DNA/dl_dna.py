@@ -52,7 +52,7 @@ def _parse_args():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hm:t:f:s:l:u:e:v")
     except getopt.GetoptError:
-        logger.error("invalid option")
+        logger.error("error")
         _usage_dl_dna()
         exit(1)
     for o, a in opts:
