@@ -1,31 +1,39 @@
-from keras.applications import MobileNet
-from keras.layers import Dense, Input, Layer
-from keras.models import Model, load_model
-from keras.optimizers import Adam
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import MobileNet
+from tensorflow.keras.layers import Dense, Input, Layer
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
 import dl_dna_model
 from sklearn.metrics.pairwise import cosine_similarity
 from lineEnumerator import LineEnumerator
 
+# 데이터 증강 설정
+datagen = ImageDataGenerator(
+    rotation_range=180,      # 0도에서 180도 사이로 무작위 회전
+    width_shift_range=0.2,   # 이미지 너비의 20%까지 무작위로 수평 이동
+    height_shift_range=0.2,  # 이미지 높이의 20%까지 무작위로 수직 이동
+    shear_range=0.2,         # 이미지를 기울임
+    zoom_range=0.2,          # 이미지 확대/축소 범위
+    horizontal_flip=True,   #수직 반전
+    vertical_flip=True,    # 수평 반전
+    fill_mode='nearest'      # 빈 공간을 처리
+)
 
-def _triplet_loss(y_true, y_pred, alpha=0.5):  
+def _triplet_loss(y_true, y_pred, alpha=2.0):
     anchor, positive, negative = y_pred[:, 0], y_pred[:, 1], y_pred[:, 2]
-
     pos_dist = tf.reduce_sum(tf.square(anchor - positive), axis=1)
     neg_dist = tf.reduce_sum(tf.square(anchor - negative), axis=1)
-
     basic_loss = pos_dist - neg_dist + alpha
     loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0))
-
     return loss
-
 
 class StackTripletEmbeddings(Layer):
     def call(self, inputs):
         anchor, positive, negative = inputs
         return tf.stack([anchor, positive, negative], axis=1)
-
 
 class ModelTriplet(dl_dna_model.DlDnaModel):
     def __init__(self):
