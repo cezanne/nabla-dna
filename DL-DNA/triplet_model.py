@@ -44,28 +44,30 @@ class ModelTriplet(dl_dna_model.DlDnaModel):
         positive_input = Input(shape=input_shape, name="positive_input")
         negative_input = Input(shape=input_shape, name="negative_input")
 
-        anchor_embedding = Dense(dl_dna_model.n_units, activation='relu')(base_model(anchor_input))
-        positive_embedding = Dense(dl_dna_model.n_units, activation='relu')(base_model(positive_input))
-        negative_embedding = Dense(dl_dna_model.n_units, activation='relu')(base_model(negative_input))
+        anchor_embedding = Dense(128, activation='relu')(base_model(anchor_input))
+        positive_embedding = Dense(128, activation='relu')(base_model(positive_input))
+        negative_embedding = Dense(128, activation='relu')(base_model(negative_input))
 
         stacked_embeddings = StackTripletEmbeddings()([anchor_embedding, positive_embedding, negative_embedding])
 
         self.dl_model = Model(inputs=[anchor_input, positive_input, negative_input], outputs=stacked_embeddings)
-        self.dl_model.compile(optimizer=Adam(learning_rate=0.00001), loss=_triplet_loss)  # 학습률을 낮춤
+        self.dl_model.compile(optimizer=Adam(learning_rate=0.00005), loss=_triplet_loss)
         self.verbose_level = 1 if dl_dna_model.verbose else 0
 
-    def _load_triplet(self, triplet):
+    def _load_and_augment_triplet(self, triplet):
         images = []
         for name in triplet:
             image = dl_dna_model.load_img_data(name)
-            images.append(image)
+            image = image.reshape((1,) + image.shape)  # (1, 224, 224, 3)으로 reshape
+            augmented_images = next(datagen.flow(image, batch_size=1))  # 증강된 이미지 생성
+            images.append(augmented_images[0])  # 증강된 이미지를 리스트에 추가
         return np.array(images)
 
     def _train_triplet_model(self, triples):
         all_anchors, all_positives, all_negatives = [], [], []
 
         for triple in triples:
-            images = self._load_triplet(triple)
+            images = self._load_and_augment_triplet(triple)
             all_anchors.append(images[0])
             all_positives.append(images[1])
             all_negatives.append(images[2])
