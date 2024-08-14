@@ -77,7 +77,14 @@ class ModelTriplet(dl_dna_model.DlDnaModel):
         all_negatives = np.array(all_negatives)
         dummy_y = np.ones((len(triples), 1))
 
-        self.dl_model.fit(x=[all_anchors, all_positives, all_negatives], y=dummy_y, epochs=50, verbose=self.verbose_level)  # Epochs를 50으로 설정
+        early_stopping = EarlyStopping(monitor='loss', patience=10)
+        self.dl_model.fit(
+            x=[all_anchors, all_positives, all_negatives], 
+            y=dummy_y, 
+            epochs=100,  
+            verbose=self.verbose_level, 
+            callbacks=[early_stopping]
+        )
 
     def train(self, fpath_train: str):
         triples = list(LineEnumerator(fpath_train, True))
