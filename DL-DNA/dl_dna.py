@@ -19,15 +19,13 @@ args = None
 def _usage_dl_dna():
     print("""\
 Usage: dl-dna.py [<options>]
-                             <image name> : show DNA
-                             <image name> <image name>: get similarity
-                             <image pair file>: get similarities
+   <image name> : show DNA
+   <image name> <image name>: get similarity
+   <image pair file>: get similarities
    <options>
    -h: help(this message)
    -m <model>: triplet_loss(default), mobilenet
    -t <training file>: training mode with file path
-       triplet_loss: image list with triple fields
-       mobilenet: not supported
    -s <path for save>: path for saving model
    -l <path for load>: path for loading model
    -u <units>: unit count for embedding vector (N_UNITS: env variable)
@@ -43,7 +41,7 @@ def _setup_envs():
     if 'IMAGE_FOLDER' in os.environ:
         dl_dna_model.image_fpath = os.environ['IMAGE_FOLDER']
     if 'EPOCHS' in os.environ:
-        dl_dna_model.epochs = os.environ['EPOCHS']
+        dl_dna_model.epochs = int(os.environ['EPOCHS'])
 
 
 def _parse_args():
@@ -97,9 +95,7 @@ if __name__ == "__main__":
         model.save(path_save)
 
     if len(args) > 0:
-        if os.path.isfile(args[0]):
-            model.show_similarities(args[0])
-        elif len(args) == 1:
+        if len(args) == 1:
             model.show_dna(args[0])
-        else:
+        elif len(args) == 2:
             model.show_similarity(args[0], args[1])
